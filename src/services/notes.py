@@ -1,23 +1,22 @@
-from src.db import get_connection
+from src.db.connection import get_connection
 
-def get_all_notes():
-    conn = get_connection()
+# Fetch all notes
+async def get_all_notes():
+    conn = await get_connection()
     try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM notes")
-            return cursor.fetchall()
+        rows = await conn.fetch("SELECT * FROM notes")
+        return [dict(row) for row in rows]
     finally:
-        conn.close()
+        await conn.close()
 
-def create_note(title: str, content: str):
-    conn = get_connection()
+# Create a new note
+async def create_note(title: str, content: str):
+    conn = await get_connection()
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO notes (title, content) VALUES (%s, %s)",
-                (title, content)
-            )
-            conn.commit()
-            return {"message": "Note created successfully"}
+        await conn.execute(
+            "INSERT INTO notes (title, content) VALUES ($1, $2)",
+            title, content
+        )
+        return {"message": "Note created successfully"}
     finally:
-        conn.close()
+        await conn.close()
